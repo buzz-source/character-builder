@@ -1,252 +1,449 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PersonaForge Pro — AI Influencer & Character Studio</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            brand: { 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body { background-color: #09090b; color: #f4f4f5; }
-    .glass { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-    .selected-chip { background-color: #7c3aed !important; border-color: #a78bfa !important; color: white !important; }
-    @media print {
-      .no-print { display: none !important; }
-      body { background: white; color: black; }
-      .glass { border: 1px solid #ccc; background: white; color: black; }
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Character Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
 
-  <!-- Top Header -->
-  <header class="border-b border-zinc-800 bg-zinc-950/80 sticky top-0 z-50 backdrop-blur-md no-print">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-pink-500 flex items-center justify-center font-bold text-lg shadow-lg shadow-brand-500/20">✦</div>
-        <div>
-          <span class="font-bold tracking-tight text-white">PersonaForge</span>
-          <span class="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full ml-1.5 border border-zinc-700">PRO 2.0</span>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <button onclick="randomizeAll()" class="text-xs md:text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5 border border-zinc-700">
-          <span>🎲</span> Surprise Me
-        </button>
-        <div class="relative">
-          <button onclick="toggleSavedModal()" class="text-xs md:text-sm bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
-            <span>📂</span> Saved Roster (<span id="savedCount">0</span>)
-          </button>
-        </div>
-      </div>
+/* Layout: a single-column casting file. Wizard card on top, ID-card style result blocks below, scene builder and saved library after. */
+:root{
+  --bg:#EDEFF3; --surface:#FFFFFF; --ink:#15171C; --muted:#5B6270; --line:#D3D8E0;
+  --accent:#2A45D6; --accent-ink:#FFFFFF; --accent-soft:#E3E7FB; --amber:#B9770F; --amber-soft:#F7ECD8; --ok:#1F7A4D;
+  --display:"Gloock", Georgia, "Times New Roman", serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101217; --surface:#191C23; --ink:#E8EAF0; --muted:#9AA1AF; --line:#2B303A;
+  --accent:#8C9DFF; --accent-ink:#0C1022; --accent-soft:#1F2540; --amber:#E3A84B; --amber-soft:#2E2617; --ok:#5CC48F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101217; --surface:#191C23; --ink:#E8EAF0; --muted:#9AA1AF; --line:#2B303A;
+  --accent:#8C9DFF; --accent-ink:#0C1022; --accent-soft:#1F2540; --amber:#E3A84B; --amber-soft:#2E2617; --ok:#5CC48F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,54px);line-height:1.04;margin:8px 0 12px;text-wrap:balance}
+h1 em{color:var(--accent)}
+h2{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.15;margin:0;text-wrap:balance}
+h3{font-size:15px;margin:0;font-weight:700}
+p{margin:0}
+.lede{color:var(--muted);max-width:56ch}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+button{font:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;border-radius:999px;font-weight:600;font-size:15px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.amber{background:var(--amber-soft);border-color:transparent;color:var(--amber)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:20px}
+.progress{display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:6px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:14%;transition:width .3s}
+.stepnum{font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.step{display:flex;flex-direction:column;gap:20px}
+.step-head{display:flex;flex-direction:column;gap:6px}
+.step-head p{color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.label{font-size:13px;font-weight:600;letter-spacing:.02em}
+.label small{font-weight:400;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 13px;border-radius:999px;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.paths{display:grid;gap:10px}
+.path{text-align:left;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.path b{font-size:16px}
+.path span{color:var(--muted);font-size:14px}
+.path[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.inrow{display:flex;gap:8px}
+input[type=text],select,textarea{font:inherit;font-size:15px;width:100%;min-width:0;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{resize:vertical;min-height:64px}
+.dice{flex:none;width:44px;border:1px solid transparent;background:var(--amber-soft);color:var(--amber);border-radius:10px;font-size:20px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.hint{font-size:14px;color:var(--muted)}
+.hint.warn{color:var(--amber);font-weight:600}
+.note{font-size:14px;background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+.result-head{display:flex;flex-direction:column;gap:8px}
+.idcard{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.mono-av{width:64px;height:64px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--display);font-size:28px}
+.idcard .who{min-width:0}
+.idcard .who b{font-family:var(--display);font-weight:400;font-size:24px;display:block}
+.idcard .who span{color:var(--muted);font-size:14px}
+.blocks{display:flex;flex-direction:column;gap:14px}
+.block{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.block header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px 10px}
+.block header div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.block header p{font-size:13px;color:var(--muted)}
+.block pre{margin:0;padding:14px 16px 16px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:13px;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.block.key{border-color:var(--accent)}
+.copy{flex:none;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600}
+.copy.done{color:var(--ok);border-color:var(--ok)}
+.row-actions{display:flex;flex-wrap:wrap;gap:10px}
+.lib{display:flex;flex-direction:column;gap:8px}
+.lib-item{display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.lib-item div{min-width:0}
+.lib-item b{display:block}
+.lib-item span{font-size:13px;color:var(--muted)}
+.lib-item .acts{display:flex;gap:6px;flex:none}
+.small{padding:6px 12px;font-size:13px}
+.empty{color:var(--muted);font-size:14px;border:1px dashed var(--line);border-radius:12px;padding:14px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.foot{font-size:13px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Character Builder · consistent prompts</div>
+    <h1>Design a character <em>nobody has seen before.</em></h1>
+    <p class="lede">Answer seven steps and get a full identity card plus ready-to-paste prompts. The identity line keeps the face the same from shot 1 to shot 200. Use the dice for original ideas.</p>
+    <div class="hero-actions">
+      <button class="btn amber" id="surprise">🎲 Surprise me</button>
+      <button class="btn ghost" id="jumpLib">Saved characters (<span id="libCount">0</span>)</button>
     </div>
   </header>
 
-  <!-- Main Content Layout -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-    
-    <!-- Left Column: Interactive Wizard / Output -->
-    <div class="lg:col-span-8 space-y-6">
-      
-      <!-- Step Progress Bar -->
-      <div id="wizardHeader" class="glass rounded-2xl p-4 no-print">
-        <div class="flex justify-between items-center mb-3">
-          <span id="stepCounter" class="text-xs font-semibold uppercase tracking-wider text-brand-400">Step 1 of 7</span>
-          <span id="stepName" class="text-xs text-zinc-400">Origin Path</span>
-        </div>
-        <div class="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-          <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-pink-500 h-full transition-all duration-300" style="width: 14.28%"></div>
-        </div>
-      </div>
+  <section class="card" id="wizard" aria-label="Character steps">
+    <div class="progress"><div class="bar"><i id="barFill"></i></div><span class="stepnum" id="stepNum">Step 1 / 7</span></div>
 
-      <!-- Dynamic Step Container -->
-      <div id="stepContainer" class="glass rounded-2xl p-6 md:p-8 min-h-[420px] flex flex-col justify-between">
-        <!-- Rendered by JS -->
-      </div>
-
-      <!-- Result Dashboard (Hidden until Step 8) -->
-      <div id="resultDashboard" class="hidden space-y-6">
-        <div class="glass rounded-2xl p-6 border-brand-500/40 bg-gradient-to-b from-brand-950/20 to-transparent">
-          <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div>
-              <span class="text-xs uppercase tracking-widest text-brand-400 font-semibold">Identity Forged</span>
-              <h2 class="text-2xl font-bold text-white mt-0.5" id="resTitle">Your Character is Born</h2>
-            </div>
-            <div class="flex flex-wrap gap-2 no-print">
-              <button onclick="saveCharacter()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">💾 Save to Browser</button>
-              <button onclick="exportMarkdown()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 transition">📝 Notion (.md)</button>
-              <button onclick="exportTxt()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 transition">📄 .TXT</button>
-              <button onclick="window.print()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 transition">🖨️ PDF</button>
-            </div>
-          </div>
-
-          <!-- Built-in Prompt Studio Tabs -->
-          <div class="border-b border-zinc-800 flex gap-4 text-sm font-medium mb-6 no-print">
-            <button onclick="switchResTab('bible')" id="tab-bible" class="pb-2.5 border-b-2 border-brand-500 text-white">📖 Character Bible & Prompts</button>
-            <button onclick="switchResTab('studio')" id="tab-studio" class="pb-2.5 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200">⚡ Interactive Prompt Studio</button>
-          </div>
-
-          <!-- Tab 1: Bible Blocks -->
-          <div id="view-bible" class="space-y-4">
-            <div id="outputBlocks" class="space-y-4"></div>
-          </div>
-
-          <!-- Tab 2: Live Scene & Script Generator -->
-          <div id="view-studio" class="hidden space-y-5 no-print">
-            <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 space-y-4">
-              <h3 class="font-semibold text-sm text-zinc-200">📸 Custom Scene Image Generator (Midjourney v6 / Flux / Nano Banana)</h3>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <label class="text-xs text-zinc-400 block mb-1">Setting / Location</label>
-                  <select id="studioSetting" onchange="updateStudioPrompt()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
-                    <option value="in a sunlit minimalist Tokyo cafe with matcha latte">Tokyo Cafe</option>
-                    <option value="walking through rainy neon-lit cyberpunk streets at night">Rainy Neon Street</option>
-                    <option value="in a high-end brutalist home studio with warm tungsten lamps">Brutalist Studio</option>
-                    <option value="on a cliffside overlooking the Mediterranean sea at golden hour">Mediterranean Golden Hour</option>
-                    <option value="inside a vintage library surrounded by towering oak bookshelves">Vintage Library</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="text-xs text-zinc-400 block mb-1">Camera Framing</label>
-                  <select id="studioShot" onchange="updateStudioPrompt()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
-                    <option value="candid medium shot, 35mm lens, f/1.8">Candid 35mm Medium Shot</option>
-                    <option value="iphone 15 front-camera selfie angle, slightly messy framing">Authentic iPhone Selfie</option>
-                    <option value="editorial close-up portrait, 85mm lens, shallow depth of field">Editorial 85mm Close-up</option>
-                    <option value="full-body street style shot, low angle, dynamic movement">Full-Body Street Style</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="text-xs text-zinc-400 block mb-1">Action / Mood</label>
-                  <select id="studioAction" onchange="updateStudioPrompt()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
-                    <option value="looking away mid-laugh, natural candid expression">Mid-laugh Candid</option>
-                    <option value="intense focused gaze directly at the camera, slight smirk">Focused Gaze</option>
-                    <option value="adjusting their signature accessory, caught off-guard">Adjusting Accessory</option>
-                    <option value="recording a voice note on their phone, passionate expression">Recording Voice Note</option>
-                  </select>
-                </div>
-              </div>
-              <div class="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 flex justify-between items-start gap-4">
-                <p id="studioPromptOut" class="text-xs font-mono text-zinc-300 leading-relaxed"></p>
-                <button onclick="copyText('studioPromptOut')" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded font-medium shrink-0">Copy</button>
-              </div>
-            </div>
-
-            <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 space-y-3">
-              <h3 class="font-semibold text-sm text-zinc-200">🎙️ ElevenLabs Voice Design Prompt</h3>
-              <div class="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 flex justify-between items-start gap-4">
-                <p id="elevenLabsOut" class="text-xs font-mono text-zinc-300 leading-relaxed"></p>
-                <button onclick="copyText('elevenLabsOut')" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded font-medium shrink-0">Copy</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6 pt-4 border-t border-zinc-800 flex justify-between no-print">
-            <button onclick="goToStep(0)" class="text-xs text-zinc-400 hover:text-white">← Edit Character Steps</button>
-            <button onclick="resetCharacter()" class="text-xs text-rose-400 hover:text-rose-300">🗑️ Reset & Start Fresh</button>
-          </div>
-        </div>
-      </div>
-
+    <!-- 1 -->
+    <div class="step" data-step="1">
+      <div class="step-head"><h2>Who is your character?</h2><p>This decides your whole path.</p></div>
+      <div class="paths" id="paths"></div>
+      <p class="note" id="pathNote" hidden></p>
     </div>
 
-    <!-- Right Column: Live Identity Preview Card -->
-    <div class="lg:col-span-4">
-      <div class="glass rounded-2xl p-6 sticky top-20 space-y-5">
-        <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
-          <div class="flex items-center gap-3">
-            <div id="avatarPreview" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center text-xl font-bold shadow-inner">
-              ?
-            </div>
-            <div>
-              <h3 id="previewName" class="font-bold text-white text-base">Unnamed Persona</h3>
-              <p id="previewSub" class="text-xs text-zinc-400">Select basics to initialize</p>
-            </div>
-          </div>
-          <span id="previewTypeBadge" class="text-[11px] bg-zinc-800 border border-zinc-700 px-2.5 py-1 rounded-full text-zinc-300">Unset</span>
-        </div>
-
-        <div class="space-y-3 text-xs">
-          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Niche Positioning</span>
-            <p id="previewNiche" class="text-zinc-200 font-medium">No niche selected yet</p>
-          </div>
-
-          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">The Hook (Twist + Flaw)</span>
-            <p id="previewHook" class="text-zinc-300">Roll or enter a twist & flaw</p>
-          </div>
-
-          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Personality Matrix</span>
-            <div id="previewTraits" class="flex flex-wrap gap-1.5 mt-1">
-              <span class="text-zinc-500">Pick 3 dominant traits</span>
-            </div>
-          </div>
-
-          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Visual Anchor</span>
-            <p id="previewVisual" class="text-zinc-300">Hair, eyes, skin & signature item</p>
-          </div>
-
-          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Voice Profile</span>
-            <p id="previewVoice" class="text-zinc-300">Unconfigured</p>
-          </div>
-        </div>
-      </div>
+    <!-- 2 -->
+    <div class="step" data-step="2" hidden>
+      <div class="step-head"><h2>The basics</h2><p>Gender, age, name and home. Hit the dice for original suggestions.</p></div>
+      <div class="field"><span class="label">Gender</span><div class="chips" id="c-gender"></div></div>
+      <div class="field"><span class="label">Age range</span><div class="chips" id="c-age"></div></div>
+      <div class="field"><label for="f-name">Name <small>· the dice mixes rare international names</small></label>
+        <div class="inrow"><input type="text" id="f-name" placeholder="e.g. Inès Valtrova"><button class="dice" data-dice="name" aria-label="Random name">🎲</button></div></div>
+      <div class="field"><label for="f-city">City / origin</label>
+        <div class="inrow"><input type="text" id="f-city" placeholder="e.g. Tbilisi, Georgia"><button class="dice" data-dice="city" aria-label="Random city">🎲</button></div></div>
     </div>
 
-  </main>
-
-  <!-- Saved Roster Modal -->
-  <div id="savedModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="glass max-w-lg w-full rounded-2xl p-6 space-y-4 border border-zinc-700">
-      <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
-        <h3 class="font-bold text-white">📂 Saved Character Roster</h3>
-        <button onclick="toggleSavedModal()" class="text-zinc-400 hover:text-white text-sm">✕</button>
-      </div>
-      <div id="savedList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+    <!-- 3 -->
+    <div class="step" data-step="3" hidden>
+      <div class="step-head"><h2>The niche</h2><p>Own a corner instead of renting a stadium. The strongest characters often sit where two niches meet.</p></div>
+      <div class="field" id="brandField" hidden><label for="f-brand">Brand or business</label><input type="text" id="f-brand" placeholder="e.g. Costa Blanca Homes, a real estate agency"></div>
+      <div class="field"><label for="f-niche">Main niche</label><select id="f-niche"></select></div>
+      <div class="field"><label for="f-sub">Sub-niche</label><select id="f-sub"></select></div>
+      <div class="field"><label for="f-niche2">Second niche <small>· optional, for an intersection combo</small></label><select id="f-niche2"></select></div>
     </div>
-  </div>
 
-  <script>
-    // --- DATABASE & POOLS ---
-    const DB = {
-      paths: [
-        { id: 'clone', icon: '🧬', title: "It's me — my AI clone", desc: "Scale your own face and voice. Build your digital twin for endless content." },
-        { id: 'zero', icon: '✨', title: "A character from zero", desc: "A fictional persona. Stay anonymous or build a media asset that isn't tied to you." },
-        { id: 'brand', icon: '🏢', title: "A brand ambassador", desc: "Represents a business or product line. Designed around target audience psychology." }
-      ],
-      genders: ['Female', 'Male', 'Non-Binary', 'Androgynous AI'],
-      ages: ['19–23 (Gen-Z)', '24–29 (Young Adult)', '30–37 (Millennial)', '38–48 (Seasoned)', '50+ (Silver Authority)'],
-      names: ['Sora Vance', 'Kaelen Thorne', 'Mireille Chen', 'Zephaniah Cruz', 'Ines Lindqvist', 'Tariq Al-Mansoor', 'Nadia Rostova', 'Caspian Voss', 'Yuki Takahashi', 'Sloane Bellamy', 'Mateo Solis', 'Freya Nystrom'],
-      cities: ['Kyoto, Japan', 'Lisbon, Portugal', 'Seoul, South Korea', 'Mexico City, Mexico', 'Copenhagen, Denmark', 'Brooklyn, NY', 'Berlin, Germany', 'Montreal, Canada', 'Buenos Aires, Argentina', 'Reykjavik, Iceland'],
-      niches: {
-        'AI & Tech Philosophy': ['Solopreneur Automation', 'Cybernetic Ethics', 'No-Code App Building', 'Future of Work'],
-        'Stoic Fitness & Biohacking': ['Longevity Protocols', 'Minimalist Calisthenics', 'Circadian Nutrition', 'Cold Exposure & Breathwork'],
-        'Dark Academia & Literature': ['Forgotten History', 'Esoteric Philosophy', 'Classic Book Breakdowns', 'Analog Journaling'],
-        'High-Contrast Street Fashion': ['Thrifted Archive Pieces', 'Techwear & Utility', 'Sustainable Capsule Wardrobes', 'Sneaker Archaeology'],
-        'Cozy Slow Living & Finance': ['Micro-Apartment Design', 'Mindful Frugalism', 'Digital Nomad Taxes', 'Artisanal Coffee Science']
-      },
-      twists: [
-        "Former corporate algorithmic trader who now lives off-grid with starlink",
-        "Speaks 4 languages fluently and switches mid-sentence when annoyed",
-        "Refuses to use smartphones after 6 PM; records everything on vintage camcorders",
-        "Explains complex concepts using absurdly specific cooking metaphors",
-        "Has a background in forensic psychology and reads micro-expressions",
-        "Chronically nomadic—never stays in the same timezone for more than 45 days"
-      ],
-      flaws:
+    <!-- 4 -->
+    <div class="step" data-step="4" hidden>
+      <div class="step-head"><h2>The twist and the flaw</h2><p>Niche + twist + flaw = a character people remember. The twist breaks the pattern. The flaw makes them human. Dice ideas adapt to your niche.</p></div>
+      <div class="field"><label for="f-twist">The twist <small>· the unexpected element</small></label>
+        <div class="inrow"><textarea id="f-twist" rows="2"></textarea><button class="dice" data-dice="twist" aria-label="Random twist">🎲</button></div></div>
+      <div class="field"><label for="f-flaw">The flaw <small>· the imperfection that shows in the content</small></label>
+        <div class="inrow"><textarea id="f-flaw" rows="2"></textarea><button class="dice" data-dice="flaw" aria-label="Random flaw">🎲</button></div></div>
+    </div>
+
+    <!-- 5 -->
+    <div class="step" data-step="5" hidden>
+      <div class="step-head"><h2>The personality</h2><p>Characters with no opinions are wallpaper. Pick 3 traits, a way of talking, and one opinion they defend.</p></div>
+      <div class="field"><span class="label">3 dominant traits <small>· <span id="traitCount">0</span>/3</small></span><div class="chips" id="c-traits"></div></div>
+      <div class="field"><span class="label">How they talk</span><div class="chips" id="c-tone"></div></div>
+      <div class="field"><label for="f-opinion">One opinion they defend</label>
+        <div class="inrow"><textarea id="f-opinion" rows="2"></textarea><button class="dice" data-dice="opinion" aria-label="Random opinion">🎲</button></div></div>
+    </div>
+
+    <!-- 6 -->
+    <div class="step" data-step="6" hidden>
+      <div class="step-head"><h2>The visual signature</h2><p>The look that stays identical in every image. The signature item is what people recognise instantly.</p></div>
+      <div class="grid2">
+        <div class="field"><label for="f-hairColor">Hair colour</label><select id="f-hairColor"></select></div>
+        <div class="field"><label for="f-hairStyle">Hair style</label><select id="f-hairStyle"></select></div>
+        <div class="field"><label for="f-eyes">Eyes</label><select id="f-eyes"></select></div>
+        <div class="field"><label for="f-skin">Skin tone</label><select id="f-skin"></select></div>
+      </div>
+      <div class="field"><span class="label">Distinctive feature <small>· optional, makes the face memorable</small></span><div class="chips" id="c-feature"></div></div>
+      <div class="field"><span class="label">Clothing style <small>· pick 1 or 2</small></span><div class="chips" id="c-clothing"></div></div>
+      <div class="field"><label for="f-signature">Signature item</label>
+        <div class="inrow"><input type="text" id="f-signature"><button class="dice" data-dice="signature" aria-label="Random signature item">🎲</button></div></div>
+      <div class="field"><span class="label">Photo look <small>· camera, lens, film stock, light and one imperfection, locked for every prompt</small></span><div class="chips" id="c-look"></div></div>
+    </div>
+
+    <!-- 7 -->
+    <div class="step" data-step="7" hidden>
+      <div class="step-head"><h2>The voice</h2><p>For video later. The voice you build in ElevenLabs should match the character.</p></div>
+      <div class="field"><span class="label">Voice type</span><div class="chips" id="c-voice"></div></div>
+      <div class="field"><span class="label">Speaking pace</span><div class="chips" id="c-pace"></div></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn ghost" id="back" hidden>← Back</button>
+      <span class="hint" id="hint"></span>
+      <button class="btn primary" id="next">Continue →</button>
+    </div>
+  </section>
+
+  <section id="result" hidden style="display:flex;flex-direction:column;gap:18px">
+    <div class="result-head"><div class="eyebrow">Result</div><h2>Your character is born.</h2><p class="lede">Copy each block where you need it: the bible into Notion, the prompts into your image tool. Characters save in this browser automatically.</p></div>
+    <div class="idcard"><div class="mono-av" id="av">A</div><div class="who"><b id="whoName"></b><span id="whoLine"></span></div></div>
+    <div class="blocks" id="blocks"></div>
+    <div class="row-actions">
+      <button class="btn primary" id="copyAll">Copy full .txt backup</button>
+      <button class="btn" id="dlTxt">💾 Download .txt</button>
+      <button class="btn" id="restart">← Start over</button>
+      <button class="btn amber" id="another">🎲 Generate another</button>
+    </div>
+    <p class="hint">Paste the full backup into Prompt Studio or a note to keep everything in one place.</p>
+
+    <div class="card" id="scene">
+      <div class="step-head"><div class="eyebrow">Scene prompt builder</div><h2>Put your character in any shot</h2><p>Every prompt starts with the same identity line and photo look, so the face stays locked.</p></div>
+      <div class="field"><label for="s-action">What happens</label><input type="text" id="s-action" value="pours coffee at a sunny kitchen counter"></div>
+      <div class="field"><label for="s-place">Where</label><input type="text" id="s-place" value="a small tiled apartment kitchen, morning"></div>
+      <div class="field"><span class="label">Shot</span><div class="chips" id="c-shot"></div></div>
+      <div class="grid2">
+        <div class="field"><label for="s-emotion">Emotion <small>· for the video prompt</small></label><input type="text" id="s-emotion" value="quiet amusement"></div>
+        <div class="field"><label for="s-cause">What they react to</label><input type="text" id="s-cause" value="the coffee overflowing the cup"></div>
+      </div>
+      <div class="field"><label for="s-int">Intensity <small>· <span id="s-intv">4</span>/10</small></label><input type="range" id="s-int" min="1" max="10" value="4"></div>
+      <div class="blocks" id="sceneBlocks"></div>
+    </div>
+  </section>
+
+  <section id="library" style="display:flex;flex-direction:column;gap:12px">
+    <div class="eyebrow">Saved characters · this browser only</div>
+    <div class="lib" id="libList"></div>
+  </section>
+
+  <p class="foot">Character Builder · build and launch your AI character</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+const PATHS=[
+ {k:'clone',t:'🧬 It\'s me, my AI clone',d:'Scale your own face and voice. Prompts are written to use your reference photos as the face source.'},
+ {k:'zero',t:'✨ A character from zero',d:'A fictional person. You stay anonymous, or build a brand asset that isn\'t you.'},
+ {k:'brand',t:'🏢 A brand face',d:'The character represents a business. Every choice must fit the brand\'s audience, not your personal taste.'}];
+const GENDERS=['Woman','Man','Non-binary'];
+const AGES=['18–24','25–34','35–44','45–54','55+'];
+const AGE_DESC={'18–24':'early twenties','25–34':'late twenties','35–44':'late thirties','45–54':'late forties','55+':'late fifties'};
+const FIRST={Woman:['Inès','Liv','Noor','Saoirse','Ottilie','Yara','Maren','Esmé','Talia','Zofia','Amara','Ilka','Solène','Mirela','Ayumi','Signe'],
+ Man:['Teodor','Kasimir','Idris','Ravi','Aurelio','Bastian','Eero','Matteo','Kofi','Lior','Oskar','Thiago','Ansel','Joaquín','Haruki'],
+ 'Non-binary':['Robin','Sasha','Noa','Ari','Kai','Remy','Eden','Sol','Lumi','Jules','Alex','Wren']};
+const LAST=['Valtrova','Okafor','Brennhaug','Castellanos','Ihara','Dravecky','Moreau','Aaltonen','Sarkis','Quintero','Lindqvist','Nakashima','Ferreira','Halvorsen','Mbeki','Ostrander','Delacroix','Rasmussen'];
+const CITIES=['Lisbon, Portugal','Tbilisi, Georgia','Bergen, Norway','Oaxaca, Mexico','Marseille, France','Busan, South Korea','Cape Town, South Africa','Valparaíso, Chile','Ljubljana, Slovenia','Kyoto, Japan','Montréal, Canada','Alicante, Spain','Reykjavík, Iceland','Medellín, Colombia','Istanbul, Türkiye','Trieste, Italy','Accra, Ghana'];
+
+const NICHES={
+ 'Fashion & style':{sub:['Quiet luxury','Thrift & vintage','Streetwear','Capsule wardrobe','Plus-size style'],twist:['styles every outfit around one thrifted piece under €5','dresses like a 1970s detective in every video','only wears garments older than they are'],opinion:['Trends are just expensive peer pressure.','Fit matters more than brand, every single time.'],pre:'working the back room of a vintage shop'},
+ 'Fitness & wellness':{sub:['Strength training','Pilates & mobility','Run club','Breathwork','Sober living'],twist:['trains only with things found in a hardware store','used to hate sport and still says so','coaches from a 6m² balcony'],opinion:['Rest days build more than gym days.','You don\'t need motivation, you need a schedule.'],pre:'teaching early-morning classes nobody showed up to'},
+ 'Food & cooking':{sub:['Budget meals','Fermentation','Street food','Plant-based','Baking science'],twist:['cooks everything in one cast-iron pan','recreates dishes from old family letters','rates every meal by what it cost per bite'],opinion:['Recipes are suggestions, salt is a law.','Expensive olive oil is wasted on cooking.'],pre:'washing dishes in a busy restaurant kitchen'},
+ 'Travel':{sub:['Slow travel','Van life','Solo travel','Hidden villages','Train journeys'],twist:['never takes a plane','travels with a vintage film camera only','picks every destination by spinning a globe'],opinion:['Two weeks in one place beats ten cities in ten days.','The best guidebook is the bus driver.'],pre:'planning other people\'s holidays at a travel desk'},
+ 'Tech & AI':{sub:['AI tools','Desk setups','Gadget reviews','No-code building','Retro tech'],twist:['reviews modern tech on a 2004 laptop','explains AI like a grandmother explains recipes','builds a new tiny app every week'],opinion:['Most AI tools are the same tool with a new logo.','Learn the basics before you buy the shortcut.'],pre:'fixing printers on a university help desk'},
+ 'Finance & side hustles':{sub:['Side hustles','Investing basics','Freelance life','Frugal living','Small business'],twist:['shows every cent of their real monthly budget','started with €50 and tracks it publicly','explains money using football tactics'],opinion:['A budget is a plan, not a punishment.','Passive income is the most active work there is.'],pre:'counting tills at a supermarket'},
+ 'Beauty & skincare':{sub:['Skin science','Minimal makeup','Men\'s grooming','Hair care','Fragrance'],twist:['tests products on only half the face','reads every ingredient list out loud','does full looks with five products or fewer'],opinion:['Sunscreen is the only anti-aging product that matters.','Ten-step routines sell guilt.'],pre:'mixing samples behind a pharmacy counter'},
+ 'Home & interiors':{sub:['Small apartments','Plant care','DIY renovation','Interior styling','Organisation'],twist:['renovates rental flats without losing the deposit','styles every room around one flea-market find','keeps 140 plants in a one-bedroom flat'],opinion:['White walls are a lack of courage.','Storage is a design choice, not an afterthought.'],pre:'assembling flat-pack furniture for strangers'},
+ 'Art & creativity':{sub:['Painting','Photography','Ceramics','Digital art','Writing'],twist:['makes art from things left on the street','creates one piece a day, no skipping','paints with coffee instead of paint'],opinion:['Talent is just practice nobody filmed.','Finished beats perfect.'],pre:'framing other people\'s art in a small shop'},
+ 'Pets & animals':{sub:['Dog training','Rescue animals','Cat behaviour','Exotic pets','Senior pets'],twist:['narrates the pet\'s thoughts as a grumpy aristocrat','only adopts animals nobody else wanted','trains dogs using music cues'],opinion:['There are no bad dogs, only bored ones.','Adopt the old one.'],pre:'walking dogs before sunrise'},
+ 'Books & learning':{sub:['Book reviews','Language learning','History','Study tips','Philosophy'],twist:['reviews books in exactly 60 seconds','learns a new language every year in public','teaches history through food'],opinion:['You don\'t have to finish a book you hate.','Grammar is easier after you start speaking.'],pre:'shelving returns in a city library'}
+};
+const GENERIC_TWIST=['films everything in one single take','is secretly 20 years older than they look and admits it','answers every comment with a voice note','only posts at sunrise'];
+const FLAWS=['always late, and it shows on camera','laughs at their own jokes before the punchline','terrible sense of direction','can\'t keep a plant alive','overthinks every decision out loud','talks way too fast when excited','bites their nails when nervous','starts more projects than they finish','says "honestly" in every sentence','scared of the dark','hopelessly competitive at board games','forgets names instantly'];
+const GENERIC_OPINION=['Nobody is too old to start.','Most advice online is written for people who already made it.','Boring consistency beats viral luck.'];
+const TRAITS=['Curious','Stubborn','Warm','Sarcastic','Calm','Chaotic','Generous','Ambitious','Shy','Loyal','Impatient','Optimistic','Skeptical','Playful','Nostalgic','Brave'];
+const TONES=['Dry & deadpan','Warm & reassuring','Blunt & direct','Playful & chaotic','Calm & poetic','Nerdy & precise'];
+const HAIR_C=['Jet black','Dark brown','Chestnut','Copper red','Honey blonde','Platinum blonde','Silver grey','Dyed sage green'];
+const HAIR_S=['blunt bob','long loose waves','buzz cut','natural curly afro','tight box braids','slicked-back','shaggy mullet','high ponytail','curtain bangs','shoulder-length curls'];
+const EYES=['Dark brown','Hazel','Amber','Green','Grey-blue','Ice blue'];
+const SKIN=['Fair porcelain','Light with warm undertone','Olive','Medium tan','Warm brown','Deep brown','Deep ebony'];
+const FEATURES=['Freckles across the nose','Beauty mark above the lip','Gap between front teeth','Small scar through left eyebrow','Heterochromia','Deep dimples','Strong straight brows','Septum ring'];
+const CLOTHES=['Minimal','Streetwear','Vintage','Sporty','Bohemian','Tailored','Grunge','Quiet luxury','Techwear'];
+const SIGS=['a single silver hoop in the left ear','a faded red beanie','round tortoiseshell glasses','a vintage gold Casio watch','a green silk scarf','chunky cream knit cardigan','a small bird tattoo behind the right ear','oversized brown leather jacket','a thin gold nose stud','a yellow raincoat'];
+const LOOKS={
+ 'Clean studio':'Shot on Phase One XF IQ4, 80mm lens at f/8, large softbox key light from camera-left at 45 degrees with white bounce fill from the right, fine sensor grain in the shadows',
+ 'Film portrait':'Shot on Contax 645, 80mm lens at f/2.8, Kodak Portra 400 film stock, soft north-window daylight from camera-right, faint warm light leak on the left edge',
+ 'Phone realism':'Shot on iPhone 15 Pro main camera, 24mm equivalent at f/1.8, overhead ceiling LED light, slight haze from a fingerprint smudge on the lens'};
+const VOICES=['Low & warm','Bright & clear','Husky','Soft & breathy','Crisp & authoritative','Raspy'];
+const PACES=['Slow','Measured','Fast'];
+const SHOTS={'Close-up':'close-up from the shoulders up','Medium':'medium shot from the waist up','Wide':'wide shot, full body in the environment','Over-shoulder':'over-the-shoulder shot'};
+
+const blank=()=>({path:null,gender:null,age:null,name:'',city:'',brand:'',niche:'',sub:'',niche2:'',twist:'',flaw:'',traits:[],tone:null,opinion:'',hairColor:'',hairStyle:'',eyes:'',skin:'',feature:null,clothing:[],signature:'',look:'Clean studio',voice:null,pace:null,shot:'Medium'});
+let S=blank(), step=1, out=null;
+
+/* ---------- builders ---------- */
+function chips(id,opts,key,{multi=false,max=1,optional=false}={}){
+  const el=$(id); el.innerHTML='';
+  opts.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=o;
+    b.onclick=()=>{ if(multi){let a=S[key];if(a.includes(o))a=a.filter(x=>x!==o);else{a=[...a,o];if(a.length>max)a.shift();}S[key]=a;}
+      else S[key]=(S[key]===o&&optional)?null:o;
+      syncChips();validate(false);if(key==='traits')$('traitCount').textContent=S.traits.length;if($('sceneBlocks').childElementCount)renderScene();};
+    b.dataset.key=key;b.dataset.val=o;el.appendChild(b);});
+}
+function syncChips(){document.querySelectorAll('.chip').forEach(b=>{const v=S[b.dataset.key];b.setAttribute('aria-pressed',Array.isArray(v)?v.includes(b.dataset.val):v===b.dataset.val);});
+  document.querySelectorAll('.path').forEach(b=>b.setAttribute('aria-pressed',S.path===b.dataset.k));}
+function fillSelect(id,opts,ph){$(id).innerHTML=(ph!==undefined?`<option value="">${ph}</option>`:'')+opts.map(o=>`<option>${o}</option>`).join('');}
+
+$('paths').innerHTML='';
+PATHS.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='path';b.dataset.k=p.k;b.innerHTML=`<b>${p.t}</b><span>${p.d}</span>`;
+  b.onclick=()=>{S.path=p.k;syncChips();pathUI();validate(false);};$('paths').appendChild(b);});
+function pathUI(){const n=$('pathNote');$('brandField').hidden=S.path!=='brand';
+  if(S.path==='clone'){n.hidden=false;n.textContent='Have 10 to 20 clear photos of yourself ready. Every face prompt will tell the image tool to use them as the face source.';}
+  else if(S.path==='brand'){n.hidden=false;n.textContent='You will name the brand in step 3. Pick traits the brand\'s customers trust.';}
+  else n.hidden=true;}
+
+chips('c-gender',GENDERS,'gender');chips('c-age',AGES,'age');
+chips('c-traits',TRAITS,'traits',{multi:true,max:3});chips('c-tone',TONES,'tone');
+chips('c-feature',FEATURES,'feature',{optional:true});chips('c-clothing',CLOTHES,'clothing',{multi:true,max:2});
+chips('c-look',Object.keys(LOOKS),'look');chips('c-voice',VOICES,'voice');chips('c-pace',PACES,'pace');chips('c-shot',Object.keys(SHOTS),'shot');
+fillSelect('f-niche',Object.keys(NICHES),'Choose a niche');fillSelect('f-hairColor',HAIR_C,'Colour');fillSelect('f-hairStyle',HAIR_S,'Style');fillSelect('f-eyes',EYES,'Eyes');fillSelect('f-skin',SKIN,'Skin tone');
+function subUI(){const n=NICHES[S.niche];fillSelect('f-sub',n?n.sub:[],n?'Choose a sub-niche':'Pick a main niche first');$('f-sub').value=S.sub;
+  fillSelect('f-niche2',Object.keys(NICHES).filter(k=>k!==S.niche),'None');$('f-niche2').value=S.niche2;}
+subUI();
+
+const binds={'f-name':'name','f-city':'city','f-brand':'brand','f-twist':'twist','f-flaw':'flaw','f-opinion':'opinion','f-signature':'signature','f-hairColor':'hairColor','f-hairStyle':'hairStyle','f-eyes':'eyes','f-skin':'skin','f-sub':'sub','f-niche2':'niche2'};
+Object.entries(binds).forEach(([id,k])=>{$(id).addEventListener('input',e=>{S[k]=e.target.value;validate(false);});$(id).addEventListener('change',e=>{S[k]=e.target.value;validate(false);});});
+$('f-niche').addEventListener('change',e=>{S.niche=e.target.value;S.sub='';if(S.niche2===S.niche)S.niche2='';subUI();validate(false);});
+function syncInputs(){Object.entries(binds).forEach(([id,k])=>{$(id).value=S[k]||'';});$('f-niche').value=S.niche;subUI();$('traitCount').textContent=S.traits.length;syncChips();pathUI();}
+
+/* ---------- dice ---------- */
+const DICE={
+ name:()=>`${pick(FIRST[S.gender]||FIRST.Woman)} ${pick(LAST)}`,
+ city:()=>pick(CITIES),
+ twist:()=>pick([...(NICHES[S.niche]?.twist||[]),...(NICHES[S.niche]?.twist||[]),...GENERIC_TWIST]),
+ flaw:()=>pick(FLAWS),
+ opinion:()=>pick([...(NICHES[S.niche]?.opinion||[]),...(NICHES[S.niche]?.opinion||[]),...GENERIC_OPINION]),
+ signature:()=>pick(SIGS)};
+document.querySelectorAll('[data-dice]').forEach(b=>b.onclick=()=>{const k=b.dataset.dice;S[k]=DICE[k]();syncInputs();validate(false);});
+
+/* ---------- steps ---------- */
+const RULES={1:[()=>S.path,'Pick a path to continue.'],2:[()=>S.gender&&S.age&&S.name.trim()&&S.city.trim(),'Pick a gender and age, and add a name and city.'],
+ 3:[()=>S.niche&&S.sub&&(S.path!=='brand'||S.brand.trim()),'Pick a main niche and a sub-niche.'],4:[()=>S.twist.trim()&&S.flaw.trim(),'Fill both, or roll the dice.'],
+ 5:[()=>S.traits.length===3&&S.tone&&S.opinion.trim(),'Pick exactly 3 traits, a tone, and an opinion.'],
+ 6:[()=>S.hairColor&&S.hairStyle&&S.eyes&&S.skin&&S.clothing.length&&S.signature.trim(),'Pick hair colour and style, eyes, skin tone, a clothing style and a signature item.'],
+ 7:[()=>S.voice&&S.pace,'Pick a voice type and a pace.']};
+function validate(show){const [ok,msg]=RULES[step];const v=!!ok();const h=$('hint');
+  if(show&&!v){h.textContent=msg;h.className='hint warn';}else{h.textContent=v?'':msg;h.className='hint';}return v;}
+function go(n){step=n;document.querySelectorAll('.step').forEach(s=>s.hidden=+s.dataset.step!==n);
+  $('stepNum').textContent=`Step ${n} / 7`;$('barFill').style.width=`${n/7*100}%`;$('back').hidden=n===1;
+  $('next').textContent=n===7?'Generate my character ✦':'Continue →';validate(false);}
+$('next').onclick=()=>{if(!validate(true))return;if(step<7){go(step+1);$('wizard').scrollIntoView({behavior:'smooth',block:'start'});}else generate();};
+$('back').onclick=()=>go(step-1);
+
+/* ---------- generation ---------- */
+function pron(){return S.gender==='Woman'?{s:'she',o:'her',p:'her',pl:false}:S.gender==='Man'?{s:'he',o:'him',p:'his',pl:false}:{s:'they',o:'them',p:'their',pl:true};}
+const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+const low=t=>t.charAt(0).toLowerCase()+t.slice(1);
+function build(){
+  const P=pron(),V=(a,b)=>P.pl?b:a,first=S.name.trim().split(' ')[0],age=AGE_DESC[S.age],gw=S.gender==='Woman'?'woman':S.gender==='Man'?'man':'non-binary person';
+  const hair=`${low(S.hairColor)} ${S.hairStyle} hair`,feat=S.feature?low(S.feature):'';
+  const clothes=S.clothing.map(low).join(' and '),look=LOOKS[S.look],nd=NICHES[S.niche],city=S.city.trim(),cityShort=city.split(',')[0];
+  const faceSrc=S.path==='clone'?'Use the attached reference photos as the only face source. ':'';
+  const identity=`${S.name.trim()}, a ${age} ${gw} with ${low(S.skin)} skin, ${low(S.eyes)} eyes, ${hair}${feat?', '+feat:''}, wearing ${clothes} clothing and ${S.signature.trim()}. Same face, same features, same hair as the reference image.`;
+  const anchor=`${faceSrc}Photorealistic head-and-shoulders portrait of ${S.name.trim()}, a ${age} ${gw} from ${city}. ${S.skin} skin with natural texture and visible pores, ${low(S.eyes)} eyes, ${hair}${feat?', '+feat:''}. Wearing ${clothes} clothing and ${S.signature.trim()}. Neutral relaxed expression, mouth closed, looking straight into the lens, shoulders square to camera. Pure white seamless background. ${look}. No retouching, no beauty filter, no text, no logo.`;
+  const sheet=`${faceSrc}Character reference sheet of ${identity.replace(' Same face, same features, same hair as the reference image.','')} Six panels on a pure white background: front headshot, three-quarter left headshot, left profile, front full body standing neutral, three-quarter right full body, back view full body. Identical lighting, identical outfit and ${S.signature.trim()} in every panel, consistent proportions. ${look}. Clean panel gutters, no labels, no text.`;
+  const bible=[`CHARACTER BIBLE: ${S.name.trim()}`,'',
+   `Type: ${PATHS.find(p=>p.k===S.path).t.replace(/^\S+\s/,'')}${S.path==='brand'?` for ${S.brand.trim()}`:''}`,
+   `Basics: ${S.gender}, ${S.age} (${age}), from ${city}`,
+   `Niche: ${S.niche} → ${S.sub}${S.niche2?` × ${S.niche2}`:''}`,
+   `Twist: ${S.twist.trim()}`,`Flaw: ${S.flaw.trim()}`,'',
+   `Traits: ${S.traits.join(', ')}`,`Talks: ${S.tone}`,`Defends: "${S.opinion.trim()}"`,'',
+   `Hair: ${S.hairColor}, ${S.hairStyle}`,`Eyes: ${S.eyes}`,`Skin: ${S.skin}`,`Distinctive feature: ${S.feature||'none'}`,`Clothing: ${S.clothing.join(' + ')}`,`Signature item: ${S.signature.trim()}`,`Photo look (${S.look}): ${look}`,'',
+   `Voice: ${S.voice}, ${low(S.pace)} pace. In ElevenLabs, describe it as a ${low(S.voice)} ${gw} voice, ${age}, ${low(S.tone)} delivery.`,'',
+   `Identity line: ${identity}`].join('\n');
+  const back=`${S.name.trim()} grew up in ${city}. Before the camera, ${P.s} spent years ${nd.pre}, which is where the interest in ${low(S.sub)} started. The turning point came when ${P.s} decided to share it the way nobody else did: ${P.s} ${S.twist.trim().replace(/^(is|are) /,V('is ','are '))}.${S.path==='brand'?` Today ${P.s} ${V('is','are')} the face of ${S.brand.trim()}.`:''} People follow for the ${low(S.sub)}, but they stay because ${P.s} never ${V('hides','hide')} the flaws. ${cap(P.s)} ${V('is','are')} ${low(S.flaw.trim())}, and ${P.s} ${V('laughs','laugh')} about it on camera. Friends describe ${P.o} as ${S.traits.map(low).join(', ').replace(/, ([^,]*)$/,' and $1')}. Ask ${P.o} what ${P.s} really ${V('thinks','think')} and you get it straight: "${S.opinion.trim()}"`;
+  const bio=`${S.sub} · ${S.niche}${S.niche2?' × '+S.niche2:''}\n${cap(S.twist.trim())}\n"${S.opinion.trim()}"\n📍 ${cityShort}\n↓ ${S.path==='brand'?'Visit '+S.brand.trim():'New video every week'}`;
+  const pillars=`1. ${S.sub} education (50%)\nPractical how-tos, beginner mistakes, before and after. Proves ${first} knows the subject.\n\n2. The twist (30%)\n${cap(S.twist.trim())}. The content only this character can make.\n\n3. The human side (20%)\n${cap(S.flaw.trim())}, strong opinions, everyday life in ${cityShort}.${S.niche2?`\n\nIntersection: every few posts, mix ${S.niche} with ${S.niche2}. That overlap is where the account has no competition.`:''}`;
+  const ideas=[
+   `1. "${S.opinion.trim()}" ${first} defends it in 30 seconds, straight to camera, ${low(S.tone)} delivery.`,
+   `2. A day in ${cityShort}: ${first}'s real ${low(S.sub)} routine, with ${S.signature.trim()} always in frame.`,
+   `3. The twist reveal: ${first} ${S.twist.trim()}, shown like it is completely normal.`,
+   `4. The flaw on camera: ${low(S.flaw.trim())} ruins an attempt at ${low(S.sub)}. Keep the fail, post the retry.`,
+   `5. 3 beginner mistakes in ${low(S.sub)}, and the one ${first} still makes.`,
+   S.niche2?`6. When ${S.niche.toLowerCase()} meets ${S.niche2.toLowerCase()}: ${first} combines both in one challenge.`:`6. ${first} reacts to the most popular ${S.niche.toLowerCase()} advice online and ranks it honestly.`].join('\n\n');
+  return {identity,anchor,sheet,bible,back,bio,pillars,ideas,look,first};
+}
+const BLOCK_META=[
+ ['bible','📖 Character Bible','Save it in Notion. Every caption, script and prompt pulls from this.'],
+ ['anchor','🎯 Anchor Face Prompt','Paste into GPT Image, Nano Banana Pro or Soul to create the first face on white.',true],
+ ['identity','🔁 Identity Line','Reuse this line in every future prompt to lock consistency.',true],
+ ['sheet','🧩 Character Sheet Prompt','Six-angle turnaround. Attach the anchor face as reference.'],
+ ['back','📜 Backstory','For captions, bios and interviews.'],
+ ['bio','📱 Instagram Bio','Ready to paste. Adjust the last line to your call to action.'],
+ ['pillars','🧭 Content Pillars','The mix that keeps the feed coherent.'],
+ ['ideas','🎬 First 6 Video Ideas','Your first two weeks of content.']];
+function blockHTML(id,title,sub,text,key){return `<article class="block${key?' key':''}"><header><div><h3>${title}</h3><p>${sub}</p></div><button class="copy" data-copy="${id}">Copy</button></header><pre id="pre-${id}"></pre></article>`;}
+function renderBlocks(container,meta,data){$(container).innerHTML=meta.map(m=>blockHTML(m[0],m[1],m[2],'',m[3])).join('');meta.forEach(m=>{$('pre-'+m[0]).textContent=data[m[0]];});}
+
+function generate(save=true){
+  out=build();
+  $('av').textContent=S.name.trim().charAt(0).toUpperCase();$('whoName').textContent=S.name.trim();
+  $('whoLine').textContent=`${S.age} · ${S.city.split(',')[0]} · ${S.sub}`;
+  renderBlocks('blocks',BLOCK_META,out);renderScene();
+  $('wizard').hidden=true;$('result').hidden=false;
+  if(save)saveChar();
+  $('result').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderScene(){if(!out)return;
+  const first=out.first,act=$('s-action').value.trim()||'stands still',place=$('s-place').value.trim()||'a plain room',emo=$('s-emotion').value.trim()||'curiosity',cause=$('s-cause').value.trim()||'something off-camera',n=+$('s-int').value;
+  $('s-intv').textContent=n;
+  const image=`${out.identity}\n\n${first} ${act} in ${place}. ${cap(SHOTS[S.shot])}. ${out.look}. Natural candid moment, not posed, no text.`;
+  const video=`${out.identity}\n\nSetting: ${place}. ${cap(SHOTS[S.shot])}. ${out.look}.\nEmotion: ${emo}, intensity ${n}/10, caused by ${cause}.\n\n0–1s: ${first} ${act}; ${first}'s eyes catch ${cause}.\n1–3s: ${first}'s ${emo} rises to ${n}/10, carried in the breath and around the eyes; the shoulders stay loose.\n3–4s: ${first}'s mouth gives a small private reaction, held for one beat.\n4–5s: ${first} returns to the task, the ${emo} still visible in the eyes.\n\nNo theatrical expressions, no exaggerated gestures, no mugging to camera. Same face as the reference image in every frame.`;
+  renderBlocks('sceneBlocks',[['scImg','🖼️ Image prompt','Attach the anchor face as reference.',true],['scVid','🎥 Video prompt (5s, timecoded)','Emotion word, intensity, cause and beats, ready for image-to-video.']],{scImg:image,scVid:video});
+}
+['s-action','s-place','s-emotion','s-cause','s-int'].forEach(id=>$(id).addEventListener('input',renderScene));
+
+/* ---------- copy ---------- */
+async function copyText(text,btn){
+  try{await navigator.clipboard.writeText(text);flash(btn,'Copied');}
+  catch(e){const pre=btn.closest('.block')?.querySelector('pre');if(pre){const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);}flash(btn,'Selected, press copy');}
+}
+function flash(btn,t){const o=btn.dataset.label||btn.textContent;btn.dataset.label=o;btn.textContent=t;btn.classList.add('done');setTimeout(()=>{btn.textContent=o;btn.classList.remove('done');},1600);}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-copy]');if(b)copyText($('pre-'+b.dataset.copy).textContent,b);});
+$('copyAll').onclick=e=>{if(!out)return;const txt=BLOCK_META.map(m=>`=== ${m[1].replace(/^\S+\s/,'').toUpperCase()} ===\n${out[m[0]]}`).join('\n\n');copyText(txt,e.currentTarget);};
+
+/* ---------- surprise / restart ---------- */
+function randomize(){
+  const keep=S.path||pick(['zero','zero','brand']);S=blank();S.path=keep;
+  S.gender=pick(GENDERS);S.age=pick(AGES.slice(0,4));S.name=DICE.name();S.city=pick(CITIES);
+  if(S.path==='brand')S.brand=pick(['Costa Blanca Homes, a real estate agency','Nordlys Coffee Roasters','Pulse CRM, a sales software company']);
+  S.niche=pick(Object.keys(NICHES));S.sub=pick(NICHES[S.niche].sub);if(Math.random()<.4)S.niche2=pick(Object.keys(NICHES).filter(k=>k!==S.niche));
+  S.twist=DICE.twist();S.flaw=pick(FLAWS);
+  const t=[...TRAITS].sort(()=>Math.random()-.5);S.traits=t.slice(0,3);S.tone=pick(TONES);S.opinion=DICE.opinion();
+  S.hairColor=pick(HAIR_C);S.hairStyle=pick(HAIR_S);S.eyes=pick(EYES);S.skin=pick(SKIN);S.feature=Math.random()<.7?pick(FEATURES):null;
+  S.clothing=[...CLOTHES].sort(()=>Math.random()-.5).slice(0,Math.random()<.5?1:2);S.signature=pick(SIGS);S.look=pick(Object.keys(LOOKS));
+  S.voice=pick(VOICES);S.pace=pick(PACES);syncInputs();
+}
+$('surprise').onclick=()=>{randomize();go(7);generate();};
+$('another').onclick=()=>{randomize();generate();};
+$('restart').onclick=()=>{S=blank();out=null;syncInputs();$('result').hidden=true;$('wizard').hidden=false;go(1);$('wizard').scrollIntoView({behavior:'smooth',block:'start'});};
+
+/* ---------- library (localStorage) ---------- */
+const LK='charbuilder.library.v1';
+function readLib(){try{return JSON.parse(localStorage.getItem(LK))||[];}catch(e){return [];}}
+function writeLib(l){try{localStorage.setItem(LK,JSON.stringify(l));}catch(e){}renderLib();}
+function saveChar(){const l=readLib().filter(c=>c.state.name!==S.name);l.unshift({saved:new Date().toISOString(),state:JSON.parse(JSON.stringify(S))});writeLib(l.slice(0,30));}
+let pendingDel=null;
+function renderLib(){const l=readLib();$('libCount').textContent=l.length;const el=$('libList');
+  if(!l.length){el.innerHTML='<p class="empty">Characters you generate are saved here, in this browser only. Tap 🎲 Surprise me to see one now.</p>';return;}
+  el.innerHTML=l.map((c,i)=>`<div class="lib-item"><div><b></b><span></span></div><div class="acts"><button class="btn small" data-load="${i}">Open</button><button class="btn ghost small" data-del="${i}">${pendingDel===i?'Tap to confirm':'Delete'}</button></div></div>`).join('');
+  [...el.children].forEach((row,i)=>{const s=l[i].state;row.querySelector('b').textContent=s.name;row.querySelector('span').textContent=`${s.sub} · ${s.city.split(',')[0]} · ${new Date(l[i].saved).toLocaleDateString()}`;});
+}
+$('libList').addEventListener('click',e=>{const ld=e.target.closest('[data-load]'),dl=e.target.closest('[data-del]');const l=readLib();
+  if(ld){S=Object.assign(blank(),l[+ld.dataset.load].state);syncInputs();go(7);generate(false);}
+  if(dl){const i=+dl.dataset.del;if(pendingDel===i){l.splice(i,1);pendingDel=null;writeLib(l);}else{pendingDel=i;renderLib();setTimeout(()=>{if(pendingDel===i){pendingDel=null;renderLib();}},3000);}}});
+$('jumpLib').onclick=()=>$('library').scrollIntoView({behavior:'smooth'});
+
+$('dlTxt').onclick=()=>{if(!out)return;const txt=BLOCK_META.map(m=>`=== ${m[1].replace(/^\S+\s/,'').toUpperCase()} ===\n${out[m[0]]}`).join('\n\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));a.download=(S.name.trim()||'character').replace(/\s+/g,'-')+'.txt';document.body.appendChild(a);a.click();a.remove();};
+renderLib();go(1);syncChips();
+</script>
+</body>
+</html>

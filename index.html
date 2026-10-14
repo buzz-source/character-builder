@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PersonaForge Pro — AI Influencer & Character Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            brand: { 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #09090b; color: #f4f4f5; }
+    .glass { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+    .selected-chip { background-color: #7c3aed !important; border-color: #a78bfa !important; color: white !important; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; color: black; }
+      .glass { border: 1px solid #ccc; background: white; color: black; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Header -->
+  <header class="border-b border-zinc-800 bg-zinc-950/80 sticky top-0 z-50 backdrop-blur-md no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-pink-500 flex items-center justify-center font-bold text-lg shadow-lg shadow-brand-500/20">✦</div>
+        <div>
+          <span class="font-bold tracking-tight text-white">PersonaForge</span>
+          <span class="text-xs bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full ml-1.5 border border-zinc-700">PRO 2.0</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="randomizeAll()" class="text-xs md:text-sm bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5 border border-zinc-700">
+          <span>🎲</span> Surprise Me
+        </button>
+        <div class="relative">
+          <button onclick="toggleSavedModal()" class="text-xs md:text-sm bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 border border-brand-500/30 px-3 py-2 rounded-lg font-medium transition flex items-center gap-1.5">
+            <span>📂</span> Saved Roster (<span id="savedCount">0</span>)
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Interactive Wizard / Output -->
+    <div class="lg:col-span-8 space-y-6">
+      
+      <!-- Step Progress Bar -->
+      <div id="wizardHeader" class="glass rounded-2xl p-4 no-print">
+        <div class="flex justify-between items-center mb-3">
+          <span id="stepCounter" class="text-xs font-semibold uppercase tracking-wider text-brand-400">Step 1 of 7</span>
+          <span id="stepName" class="text-xs text-zinc-400">Origin Path</span>
+        </div>
+        <div class="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+          <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-pink-500 h-full transition-all duration-300" style="width: 14.28%"></div>
+        </div>
+      </div>
+
+      <!-- Dynamic Step Container -->
+      <div id="stepContainer" class="glass rounded-2xl p-6 md:p-8 min-h-[420px] flex flex-col justify-between">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Result Dashboard (Hidden until Step 8) -->
+      <div id="resultDashboard" class="hidden space-y-6">
+        <div class="glass rounded-2xl p-6 border-brand-500/40 bg-gradient-to-b from-brand-950/20 to-transparent">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <div>
+              <span class="text-xs uppercase tracking-widest text-brand-400 font-semibold">Identity Forged</span>
+              <h2 class="text-2xl font-bold text-white mt-0.5" id="resTitle">Your Character is Born</h2>
+            </div>
+            <div class="flex flex-wrap gap-2 no-print">
+              <button onclick="saveCharacter()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition">💾 Save to Browser</button>
+              <button onclick="exportMarkdown()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 transition">📝 Notion (.md)</button>
+              <button onclick="exportTxt()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 transition">📄 .TXT</button>
+              <button onclick="window.print()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold px-3 py-2 rounded-lg border border-zinc-700 transition">🖨️ PDF</button>
+            </div>
+          </div>
+
+          <!-- Built-in Prompt Studio Tabs -->
+          <div class="border-b border-zinc-800 flex gap-4 text-sm font-medium mb-6 no-print">
+            <button onclick="switchResTab('bible')" id="tab-bible" class="pb-2.5 border-b-2 border-brand-500 text-white">📖 Character Bible & Prompts</button>
+            <button onclick="switchResTab('studio')" id="tab-studio" class="pb-2.5 border-b-2 border-transparent text-zinc-400 hover:text-zinc-200">⚡ Interactive Prompt Studio</button>
+          </div>
+
+          <!-- Tab 1: Bible Blocks -->
+          <div id="view-bible" class="space-y-4">
+            <div id="outputBlocks" class="space-y-4"></div>
+          </div>
+
+          <!-- Tab 2: Live Scene & Script Generator -->
+          <div id="view-studio" class="hidden space-y-5 no-print">
+            <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 space-y-4">
+              <h3 class="font-semibold text-sm text-zinc-200">📸 Custom Scene Image Generator (Midjourney v6 / Flux / Nano Banana)</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label class="text-xs text-zinc-400 block mb-1">Setting / Location</label>
+                  <select id="studioSetting" onchange="updateStudioPrompt()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="in a sunlit minimalist Tokyo cafe with matcha latte">Tokyo Cafe</option>
+                    <option value="walking through rainy neon-lit cyberpunk streets at night">Rainy Neon Street</option>
+                    <option value="in a high-end brutalist home studio with warm tungsten lamps">Brutalist Studio</option>
+                    <option value="on a cliffside overlooking the Mediterranean sea at golden hour">Mediterranean Golden Hour</option>
+                    <option value="inside a vintage library surrounded by towering oak bookshelves">Vintage Library</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-400 block mb-1">Camera Framing</label>
+                  <select id="studioShot" onchange="updateStudioPrompt()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="candid medium shot, 35mm lens, f/1.8">Candid 35mm Medium Shot</option>
+                    <option value="iphone 15 front-camera selfie angle, slightly messy framing">Authentic iPhone Selfie</option>
+                    <option value="editorial close-up portrait, 85mm lens, shallow depth of field">Editorial 85mm Close-up</option>
+                    <option value="full-body street style shot, low angle, dynamic movement">Full-Body Street Style</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs text-zinc-400 block mb-1">Action / Mood</label>
+                  <select id="studioAction" onchange="updateStudioPrompt()" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white">
+                    <option value="looking away mid-laugh, natural candid expression">Mid-laugh Candid</option>
+                    <option value="intense focused gaze directly at the camera, slight smirk">Focused Gaze</option>
+                    <option value="adjusting their signature accessory, caught off-guard">Adjusting Accessory</option>
+                    <option value="recording a voice note on their phone, passionate expression">Recording Voice Note</option>
+                  </select>
+                </div>
+              </div>
+              <div class="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 flex justify-between items-start gap-4">
+                <p id="studioPromptOut" class="text-xs font-mono text-zinc-300 leading-relaxed"></p>
+                <button onclick="copyText('studioPromptOut')" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded font-medium shrink-0">Copy</button>
+              </div>
+            </div>
+
+            <div class="bg-zinc-900/90 border border-zinc-800 rounded-xl p-4 space-y-3">
+              <h3 class="font-semibold text-sm text-zinc-200">🎙️ ElevenLabs Voice Design Prompt</h3>
+              <div class="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800 flex justify-between items-start gap-4">
+                <p id="elevenLabsOut" class="text-xs font-mono text-zinc-300 leading-relaxed"></p>
+                <button onclick="copyText('elevenLabsOut')" class="bg-brand-600 hover:bg-brand-500 text-white text-xs px-3 py-1.5 rounded font-medium shrink-0">Copy</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-zinc-800 flex justify-between no-print">
+            <button onclick="goToStep(0)" class="text-xs text-zinc-400 hover:text-white">← Edit Character Steps</button>
+            <button onclick="resetCharacter()" class="text-xs text-rose-400 hover:text-rose-300">🗑️ Reset & Start Fresh</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Live Identity Preview Card -->
+    <div class="lg:col-span-4">
+      <div class="glass rounded-2xl p-6 sticky top-20 space-y-5">
+        <div class="flex items-center justify-between border-b border-zinc-800 pb-4">
+          <div class="flex items-center gap-3">
+            <div id="avatarPreview" class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-pink-500 flex items-center justify-center text-xl font-bold shadow-inner">
+              ?
+            </div>
+            <div>
+              <h3 id="previewName" class="font-bold text-white text-base">Unnamed Persona</h3>
+              <p id="previewSub" class="text-xs text-zinc-400">Select basics to initialize</p>
+            </div>
+          </div>
+          <span id="previewTypeBadge" class="text-[11px] bg-zinc-800 border border-zinc-700 px-2.5 py-1 rounded-full text-zinc-300">Unset</span>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Niche Positioning</span>
+            <p id="previewNiche" class="text-zinc-200 font-medium">No niche selected yet</p>
+          </div>
+
+          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">The Hook (Twist + Flaw)</span>
+            <p id="previewHook" class="text-zinc-300">Roll or enter a twist & flaw</p>
+          </div>
+
+          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Personality Matrix</span>
+            <div id="previewTraits" class="flex flex-wrap gap-1.5 mt-1">
+              <span class="text-zinc-500">Pick 3 dominant traits</span>
+            </div>
+          </div>
+
+          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Visual Anchor</span>
+            <p id="previewVisual" class="text-zinc-300">Hair, eyes, skin & signature item</p>
+          </div>
+
+          <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
+            <span class="text-zinc-500 uppercase tracking-wider font-semibold block mb-1">Voice Profile</span>
+            <p id="previewVoice" class="text-zinc-300">Unconfigured</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Saved Roster Modal -->
+  <div id="savedModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="glass max-w-lg w-full rounded-2xl p-6 space-y-4 border border-zinc-700">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-3">
+        <h3 class="font-bold text-white">📂 Saved Character Roster</h3>
+        <button onclick="toggleSavedModal()" class="text-zinc-400 hover:text-white text-sm">✕</button>
+      </div>
+      <div id="savedList" class="space-y-2 max-h-80 overflow-y-auto"></div>
+    </div>
+  </div>
+
+  <script>
+    // --- DATABASE & POOLS ---
+    const DB = {
+      paths: [
+        { id: 'clone', icon: '🧬', title: "It's me — my AI clone", desc: "Scale your own face and voice. Build your digital twin for endless content." },
+        { id: 'zero', icon: '✨', title: "A character from zero", desc: "A fictional persona. Stay anonymous or build a media asset that isn't tied to you." },
+        { id: 'brand', icon: '🏢', title: "A brand ambassador", desc: "Represents a business or product line. Designed around target audience psychology." }
+      ],
+      genders: ['Female', 'Male', 'Non-Binary', 'Androgynous AI'],
+      ages: ['19–23 (Gen-Z)', '24–29 (Young Adult)', '30–37 (Millennial)', '38–48 (Seasoned)', '50+ (Silver Authority)'],
+      names: ['Sora Vance', 'Kaelen Thorne', 'Mireille Chen', 'Zephaniah Cruz', 'Ines Lindqvist', 'Tariq Al-Mansoor', 'Nadia Rostova', 'Caspian Voss', 'Yuki Takahashi', 'Sloane Bellamy', 'Mateo Solis', 'Freya Nystrom'],
+      cities: ['Kyoto, Japan', 'Lisbon, Portugal', 'Seoul, South Korea', 'Mexico City, Mexico', 'Copenhagen, Denmark', 'Brooklyn, NY', 'Berlin, Germany', 'Montreal, Canada', 'Buenos Aires, Argentina', 'Reykjavik, Iceland'],
+      niches: {
+        'AI & Tech Philosophy': ['Solopreneur Automation', 'Cybernetic Ethics', 'No-Code App Building', 'Future of Work'],
+        'Stoic Fitness & Biohacking': ['Longevity Protocols', 'Minimalist Calisthenics', 'Circadian Nutrition', 'Cold Exposure & Breathwork'],
+        'Dark Academia & Literature': ['Forgotten History', 'Esoteric Philosophy', 'Classic Book Breakdowns', 'Analog Journaling'],
+        'High-Contrast Street Fashion': ['Thrifted Archive Pieces', 'Techwear & Utility', 'Sustainable Capsule Wardrobes', 'Sneaker Archaeology'],
+        'Cozy Slow Living & Finance': ['Micro-Apartment Design', 'Mindful Frugalism', 'Digital Nomad Taxes', 'Artisanal Coffee Science']
+      },
+      twists: [
+        "Former corporate algorithmic trader who now lives off-grid with starlink",
+        "Speaks 4 languages fluently and switches mid-sentence when annoyed",
+        "Refuses to use smartphones after 6 PM; records everything on vintage camcorders",
+        "Explains complex concepts using absurdly specific cooking metaphors",
+        "Has a background in forensic psychology and reads micro-expressions",
+        "Chronically nomadic—never stays in the same timezone for more than 45 days"
+      ],
+      flaws:
